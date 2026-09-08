@@ -1,0 +1,183 @@
+import { useRef, useMemo, useCallback } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three'
+
+const PARTICLE_COUNT = 3000
+
+const vertexShader = `
+  uniform float uTime;
+  uniform vec2 uMouse;
+  uniform float uMouseVelocity;
+
+  attribute float aSize;
+  attribute float aPhase;
+  attribute vec3 aInitPos;
+
+  varying float vOpacity;
+
+  void main() {
+    vec3 pos = aInitPos;
+
+    // Organic drift noise
+    float nx = sin(pos.y * 0.5 + uTime * 0.28 + aPhase) * 0.32;
+    float ny = cos(pos.x * 0.4 + uTime * 0.21 + aPhase * 1.4) * 0.28;
+    float nz = sin(pos.z * 0.35 + uTime * 0.19 + aPhase * 0.8) * 0.25;
+    pos += vec3(nx, ny, nz);
+
+    // Cursor velocity repulsion
+    float dist = distance(pos.xy, uMouse * 5.5);
+    float repel = smoothstep(2.2, 0.0, dist) * uMouseVelocity;
+    vec2 dir = normalize(pos.xy - uMouse * 5.5 + vec2(0.0001));
+    pos.xy += dir * repel * 1.8;
+
+    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+    gl_PointSize = aSize * (280.0 / -mvPos.z);
+    gl_Position = projectionMatrix * mvPos;
+
+    vOpacity = smoothstep(0.2, 1.0, (pos.z + 3.5) / 7.0) * 0.65 + 0.08;
+  }
+`
+
+const fragmentShader = `
+  uniform vec3 uColor;
+  varying float vOpacity;
+
+  void main() {
+    vec2 uv = gl_PointCoord - 0.5;
+    float d = length(uv);
+    if (d > 0.5) discard;
+    float alpha = smoothstep(0.5, 0.15, d) * vOpacity;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`
+
+function Particles() {
+  const { pointer } = useThree()
+  const meshRef = useRef<THREE.Points>(null)
+  const prevPointer = useRef({ x: 0, y: 0 })
+  const velocityRef = useRef(0)
+
+  const { geo, uniforms } = useMemo(() => {
+    const positions = new Float32Array(PARTICLE_COUNT * 3)
+    const sizes = new Float32Array(PARTICLE_COUNT)
+    const phases = new Float32Array(PARTICLE_COUNT)
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const r = 1.5 + Math.random() * 3.5
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 7
+      sizes[i] = Math.random() * 2.2 + 0.4
+      phases[i] = Math.random() * Math.PI * 2
+    }
+
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('aInitPos', new THREE.BufferAttribute(positions.slice(), 3))
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
+    geo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1))
+
+    const uniforms = {
+      uTime: { value: 0 },
+      uMouse: { value: new THREE.Vector2(0, 0) },
+      uMouseVelocity: { value: 0 },
+      uColor: { value: new THREE.Color('#D4FF00') },
+    }
+
+    return { geo, uniforms }
+  }, [])
+
+  useFrame((_, delta) => {
+    if (!meshRef.current) return
+    const mat = meshRef.current.material as THREE.ShaderMaterial
+
+    const dx = pointer.x - prevPointer.current.x
+    const dy = pointer.y - prevPointer.current.y
+    const speed = Math.sqrt(dx * dx + dy * dy) / Math.max(delta, 0.001)
+    velocityRef.current += (Math.min(speed, 60) - velocityRef.current) * 0.12
+    prevPointer.current = { x: pointer.x, y: pointer.y }
+
+    mat.uniforms.uTime.value += delta
+    mat.uniforms.uMouse.value.set(pointer.x, pointer.y)
+    mat.uniforms.uMouseVelocity.value = velocityRef.current
+
+    meshRef.current.rotation.y += delta * 0.018
+    meshRef.current.rotation.x += delta * 0.009
+  })
+
+  return (
+    <points ref={meshRef}>
+      <primitive object={geo} />
+      <shaderMaterial
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={uniforms}
+        transparent
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  )
+}
+
+function ShockwaveRing({ onFire }: { onFire?: () => void }) {
+  const ringRef = useRef<THREE.Mesh>(null)
+  const progress = useRef(0)
+  const active = useRef(false)
+  const { pointer } = useThree()
+
+  useFrame((_, delta) => {
+    if (!ringRef.current || !active.current) return
+    progress.current += delta * 2.2
+    const scale = progress.current * 5
+    ringRef.current.scale.set(scale, scale, 1)
+    ;(ringRef.current.material as THREE.MeshBasicMaterial).opacity =
+      Math.max(0, 1 - progress.current)
+    if (progress.current >= 1) {
+      active.current = false
+      progress.current = 0
+      ringRef.current.scale.set(0.001, 0.001, 1)
+    }
+  })
+
+  const handleClick = useCallback(() => {
+    if (!ringRef.current) return
+    active.current = true
+    progress.current = 0
+    ringRef.current.position.set(pointer.x * 5.5, pointer.y * 5.5, 0)
+    onFire?.()
+  }, [pointer, onFire])
+
+  return (
+    <mesh ref={ringRef} scale={[0.001, 0.001, 1]} onClick={handleClick}>
+      <ringGeometry args={[0.7, 1, 64]} />
+      <meshBasicMaterial
+        color="#D4FF00"
+        transparent
+        opacity={0}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  )
+}
+
+interface HeroCanvasProps {
+  onShockwave?: () => void
+}
+
+export default function HeroCanvas({ onShockwave }: HeroCanvasProps) {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 8], fov: 58 }}
+      dpr={[1, 1.5]}
+      gl={{ antialias: false, powerPreference: 'high-performance', alpha: true }}
+      style={{ position: 'absolute', inset: 0 }}
+      aria-hidden="true"
+    >
+      <Particles />
+      <ShockwaveRing onFire={onShockwave} />
+    </Canvas>
+  )
+}
