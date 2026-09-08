@@ -6,32 +6,29 @@ interface KineticTextProps {
   text: string
   className?: string
   delay?: number
-  as?: keyof React.JSX.IntrinsicElements
 }
 
-import React from 'react'
-
-export default function KineticText({
-  text,
-  className = '',
-  delay = 0,
-  as: Tag = 'span',
-}: KineticTextProps) {
-  const elRef = useRef<HTMLElement>(null)
+/**
+ * Kinetic text reveal: chars slide up + deskew via GSAP SplitType.
+ * Wraps content in a <span> with overflow-hidden to clip the animation.
+ * prefers-reduced-motion safe.
+ */
+export default function KineticText({ text, className = '', delay = 0 }: KineticTextProps) {
+  const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    const el = elRef.current
+    const el = ref.current
     if (!el) return
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
-    if (prefersReducedMotion) return
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) return
 
     const split = new SplitType(el, { types: 'chars,words' })
     const chars = split.chars
     if (!chars?.length) return
 
     gsap.set(chars, { yPercent: 115, skewX: 14, opacity: 0 })
+
     const tl = gsap.timeline({ delay })
     tl.to(chars, {
       yPercent: 0,
@@ -49,9 +46,12 @@ export default function KineticText({
   }, [delay, text])
 
   return (
-    // @ts-expect-error dynamic tag
-    <Tag ref={elRef} className={`overflow-hidden inline-block ${className}`}>
+    <span
+      ref={ref}
+      className={`inline-block overflow-hidden ${className}`}
+      aria-label={text}
+    >
       {text}
-    </Tag>
+    </span>
   )
 }

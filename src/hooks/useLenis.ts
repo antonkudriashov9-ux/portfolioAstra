@@ -13,27 +13,22 @@ export function getLenis() {
 
 export function useLenis() {
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     lenisInstance = new Lenis({
-      duration: prefersReducedMotion ? 0 : 1.4,
+      duration: reduced ? 0 : 1.4,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
-      smoothWheel: !prefersReducedMotion,
+      smoothWheel: !reduced,
       wheelMultiplier: 1,
       touchMultiplier: 2,
     })
 
-    // Sync Lenis with GSAP ScrollTrigger
-    lenisInstance.on('scroll', ScrollTrigger.update)
+    // Keep GSAP ScrollTrigger in sync with Lenis scroll position
+    lenisInstance.on('scroll', () => ScrollTrigger.update())
 
-    const tick = (time: number) => {
-      lenisInstance?.raf(time * 1000)
-    }
-
+    const tick = (time: number) => lenisInstance?.raf(time * 1000)
     gsap.ticker.add(tick)
     gsap.ticker.lagSmoothing(0)
 
