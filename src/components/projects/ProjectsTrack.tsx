@@ -45,7 +45,7 @@ const PROJECTS: Project[] = [
     index: '03',
     title: 'WebGL Portfolio Engine',
     description:
-      'Custom GLSL particle system with 3000 physics-driven particles, cursor-velocity shockwaves, and kinetic text reveal. 60fps on mid-range mobile with graceful degradation.',
+      'Custom GLSL particle system with 2500 physics-driven particles, cursor-velocity shockwaves, and kinetic text reveal. 60fps on mid-range mobile with graceful degradation.',
     tech: ['Three.js', 'R3F', 'GLSL', 'GSAP', 'WebGL2'],
     metric: '60fps',
     metricLabel: 'Mobile Target',
@@ -73,47 +73,82 @@ function ProjectCard({ project }: { project: Project }) {
 
   return (
     <motion.div
-      style={{ rotateX: sRotX, rotateY: sRotY, transformStyle: 'preserve-3d' }}
+      style={{
+        rotateX: sRotX,
+        rotateY: sRotY,
+        transformStyle: 'preserve-3d',
+        background: '#111111',
+        borderColor: '#2A2A2A',
+      }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect()
         rotX.set(((e.clientY - r.top - r.height / 2) / (r.height / 2)) * -7)
         rotY.set(((e.clientX - r.left - r.width / 2) / (r.width / 2)) * 7)
       }}
-      onMouseLeave={() => { rotX.set(0); rotY.set(0) }}
+      onMouseLeave={() => {
+        rotX.set(0)
+        rotY.set(0)
+      }}
       onMouseEnter={hover}
       className="flex-shrink-0 w-[380px] md:w-[440px] p-8 rounded-2xl border relative overflow-hidden"
-      style={{ background: '#111111', borderColor: '#2A2A2A' }}
     >
+      {/* Accent glow */}
       <div
         className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-[0.07] pointer-events-none"
         style={{ background: project.accent }}
+        aria-hidden="true"
       />
+
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-start justify-between mb-6">
-          <span className="font-mono text-xs tracking-widest" style={{ color: project.accent }}>
+          <span
+            className="font-mono text-xs tracking-widest"
+            style={{ color: project.accent }}
+          >
             {project.index}
           </span>
           <div className="text-right">
-            <div className="font-mono text-3xl font-bold leading-none" style={{ color: project.accent }}>
+            <div
+              className="font-mono text-3xl font-bold leading-none"
+              style={{ color: project.accent }}
+            >
               {project.metric}
             </div>
-            <div className="font-mono text-[9px] tracking-widest uppercase mt-1" style={{ color: '#333' }}>
+            <div
+              className="font-mono tracking-widest uppercase mt-1"
+              style={{ fontSize: '9px', color: '#333' }}
+            >
               {project.metricLabel}
             </div>
           </div>
         </div>
-        <h3 className="text-xl font-bold mb-3 leading-tight" style={{ color: '#F5F4F2' }}>
+
+        <h3
+          className="text-xl font-bold mb-3 leading-tight"
+          style={{ color: '#F5F4F2' }}
+        >
           {project.title}
         </h3>
-        <p className="text-sm leading-relaxed mb-6 flex-1" style={{ color: '#A8A6A2' }}>
+
+        <p
+          className="text-sm leading-relaxed mb-6 flex-1"
+          style={{ color: '#A8A6A2' }}
+        >
           {project.description}
         </p>
+
         <div className="flex flex-wrap gap-2">
           {project.tech.map((t) => (
             <span
               key={t}
-              className="font-mono text-[10px] tracking-wider px-2 py-1 border uppercase"
-              style={{ color: '#555', borderColor: '#2A2A2A' }}
+              className="font-mono uppercase border"
+              style={{
+                fontSize: '10px',
+                letterSpacing: '0.08em',
+                padding: '3px 8px',
+                color: '#555',
+                borderColor: '#2A2A2A',
+              }}
             >
               {t}
             </span>
@@ -132,11 +167,13 @@ export default function ProjectsTrack() {
     const section = sectionRef.current
     const track = trackRef.current
     if (!section || !track) return
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reducedMotion) return
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) return
 
     const ctx = gsap.context(() => {
       const totalScroll = track.scrollWidth - track.clientWidth
+
       gsap.to(track, {
         x: -totalScroll,
         ease: 'none',
@@ -165,7 +202,10 @@ export default function ProjectsTrack() {
       <div className="px-6 md:px-14 pt-24 pb-6">
         <div className="flex items-center gap-3 mb-3">
           <span className="block w-8 h-px" style={{ background: '#D4FF00' }} />
-          <span className="font-mono text-xs tracking-widest uppercase" style={{ color: '#D4FF00' }}>
+          <span
+            className="font-mono text-xs tracking-widest uppercase"
+            style={{ color: '#D4FF00' }}
+          >
             Selected Work
           </span>
         </div>
@@ -176,6 +216,7 @@ export default function ProjectsTrack() {
           Projects
         </h2>
       </div>
+
       <div
         ref={trackRef}
         className="flex gap-6 px-6 md:px-14 pb-24 pt-8"
