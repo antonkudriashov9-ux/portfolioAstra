@@ -13,130 +13,145 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative w-full h-screen min-h-[640px] flex flex-col justify-center overflow-hidden"
-      style={{ background: '#0A0A0A' }}
+      style={{
+        position: 'relative', width: '100%', height: '100vh', minHeight: 640,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        overflow: 'hidden', background: '#0A0A0A',
+      }}
     >
-      {/* WebGL Canvas - full bleed behind content */}
       <HeroCanvas onShockwave={handleShockwave} />
 
-      {/* Subtle grid overlay */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none select-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(212,255,0,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(212,255,0,0.018) 1px,transparent 1px)',
-          backgroundSize: '80px 80px',
-        }}
-      />
+      {/* Сетка-оверлей */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage:
+          'linear-gradient(rgba(212,255,0,0.018) 1px, transparent 1px),' +
+          'linear-gradient(90deg, rgba(212,255,0,0.018) 1px, transparent 1px)',
+        backgroundSize: '80px 80px',
+      }} />
 
-      {/* Bottom vignette */}
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 left-0 right-0 h-56 pointer-events-none"
-        style={{ background: 'linear-gradient(to bottom,transparent,#0A0A0A)' }}
-      />
+      {/* Нижний градиент */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: 200, pointerEvents: 'none',
+        background: 'linear-gradient(to bottom, transparent, #0A0A0A)',
+      }} />
 
-      {/* Text content */}
-      <div className="relative z-10 px-6 md:px-14 lg:px-24">
-        {/* Eyebrow */}
+      {/* Контент */}
+      <div style={{
+        position: 'relative', zIndex: 10,
+        padding: '0 clamp(24px, 6vw, 96px)',
+        maxWidth: 1200,
+      }}>
+        {/* Надпись-метка */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
-          className="flex items-center gap-3 mb-6"
+          style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}
         >
-          <span className="block w-8 h-px flex-shrink-0" style={{ background: '#D4FF00' }} />
-          <span className="font-mono text-xs tracking-widest uppercase" style={{ color: '#D4FF00' }}>
-            Senior Full-Stack Engineer
+          <span style={{ display: 'block', width: 32, height: 1, background: '#D4FF00', flexShrink: 0 }} />
+          <span style={{
+            fontFamily: 'JetBrains Mono, monospace', fontSize: 11,
+            letterSpacing: '0.18em', textTransform: 'uppercase', color: '#D4FF00',
+          }}>
+            Senior Full-Stack Инженер
           </span>
         </motion.div>
 
-        {/* Main headline */}
-        <h1
-          className="font-bold mb-7"
-          style={{
-            fontSize: 'clamp(3.2rem, 9vw, 8rem)',
-            lineHeight: 0.94,
-            fontFamily: "'Space Grotesk',sans-serif",
-          }}
-        >
-          <span className="block overflow-hidden" style={{ color: '#F5F4F2' }}>
-            <KineticText text="Systems" delay={0.2} />
+        {/* Заголовок */}
+        <h1 style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
+          fontSize: 'clamp(3.2rem, 10vw, 8.5rem)',
+          lineHeight: 0.92,
+          letterSpacing: '-0.02em',
+          marginBottom: 36,
+          overflow: 'hidden',
+        }}>
+          <span style={{ display: 'block', color: '#F5F4F2', overflow: 'hidden' }}>
+            <KineticText text="Системы" delay={0.2} />
           </span>
-          <span className="block overflow-hidden" style={{ color: '#D4FF00' }}>
-            <KineticText text="That Scale." delay={0.38} />
+          <span style={{ display: 'block', color: '#D4FF00', overflow: 'hidden' }}>
+            <KineticText text="Которые Масштабируются." delay={0.38} />
           </span>
         </h1>
 
-        {/* Subtext */}
+        {/* Описание */}
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.75, ease: [0.19, 1, 0.22, 1] }}
           style={{
-            fontSize: 'clamp(0.9rem, 1.7vw, 1.05rem)',
-            color: '#A8A6A2',
-            lineHeight: 1.7,
-            maxWidth: '440px',
-            marginBottom: '2.25rem',
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontSize: 'clamp(0.95rem, 1.8vw, 1.08rem)',
+            color: '#A8A6A2', lineHeight: 1.7,
+            maxWidth: 460, marginBottom: 44,
           }}
         >
-          Building distributed systems and WebGL experiences at 60fps.
-          Click the canvas to fire shockwaves.
+          Строю распределённые системы и WebGL-интерфейсы при 60fps.<br />
+          Кликните на холст — запустите ударную волну.
         </motion.p>
 
-        {/* CTAs */}
+        {/* Кнопки */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.95, ease: [0.19, 1, 0.22, 1] }}
-          className="flex flex-wrap gap-4"
+          style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}
         >
           <button
             onClick={() => { click(); setTerminalOpen(true) }}
-            className="font-mono text-sm tracking-wider px-8 py-3.5 font-semibold transition-transform duration-150 hover:scale-105 active:scale-95"
             style={{
-              background: '#D4FF00',
-              color: '#0A0A0A',
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 13,
+              letterSpacing: '0.08em', padding: '16px 32px', fontWeight: 600,
+              background: '#D4FF00', color: '#0A0A0A', border: 'none', cursor: 'pointer',
               clipPath: 'polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))',
+              transition: 'transform 0.2s',
             }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.04)' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
+            aria-label="Открыть терминал (Cmd+K)"
           >
-            Open Terminal_
+            Открыть терминал_
           </button>
           <a
             href="#projects"
             onClick={click}
-            className="font-mono text-sm tracking-wider px-8 py-3.5 border transition-colors duration-200"
-            style={{ borderColor: '#2A2A2A', color: '#F5F4F2' }}
-            onMouseEnter={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.borderColor='#D4FF00'; el.style.color='#D4FF00' }}
-            onMouseLeave={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.borderColor='#2A2A2A'; el.style.color='#F5F4F2' }}
+            style={{
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 13,
+              letterSpacing: '0.08em', padding: '16px 32px',
+              border: '1px solid #2A2A2A', color: '#F5F4F2',
+              textDecoration: 'none', transition: 'border-color 0.2s, color 0.2s',
+              display: 'inline-flex', alignItems: 'center',
+            }}
+            onMouseEnter={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.borderColor = '#D4FF00'; el.style.color = '#D4FF00' }}
+            onMouseLeave={(e) => { const el = e.currentTarget as HTMLAnchorElement; el.style.borderColor = '#2A2A2A'; el.style.color = '#F5F4F2' }}
           >
-            View Projects
+            Посмотреть работы
           </a>
         </motion.div>
       </div>
 
-      {/* Telemetry strip — pinned to bottom-left */}
+      {/* Метрики */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.2, delay: 1.5 }}
-        aria-label="Live telemetry"
-        className="absolute bottom-8 left-6 md:left-14 lg:left-24 z-10 flex items-end gap-8"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, delay: 1.4 }}
+        style={{
+          position: 'absolute', bottom: 36, left: 'clamp(24px, 6vw, 96px)',
+          display: 'flex', gap: 40, zIndex: 10,
+        }}
       >
         {[
-          { label: 'Uptime',       value: '99.97%' },
-          { label: 'P99 Latency', value: '12ms'   },
-          { label: 'Daily Events',value: '12M+'   },
+          { l: 'Аптайм', v: '99.97%' },
+          { l: 'P99 задержка', v: '12ms' },
+          { l: 'Событий в день', v: '12M+' },
         ].map((m) => (
-          <div key={m.label} className="flex flex-col gap-0.5">
-            <span className="font-mono uppercase tracking-widest select-none" style={{ fontSize: '8px', color: '#3A3A3A' }}>
-              {m.label}
-            </span>
-            <span className="font-mono font-bold" style={{ fontSize: '13px', color: '#D4FF00', lineHeight: 1 }}>
-              {m.value}
-            </span>
+          <div key={m.l}>
+            <div style={{
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
+              letterSpacing: '0.2em', textTransform: 'uppercase', color: '#3A3A3A',
+            }}>{m.l}</div>
+            <div style={{
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 14,
+              fontWeight: 700, color: '#D4FF00', marginTop: 4,
+            }}>{m.v}</div>
           </div>
         ))}
       </motion.div>

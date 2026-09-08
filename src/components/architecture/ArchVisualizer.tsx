@@ -2,170 +2,152 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAudio } from '../../hooks/useAudio'
 
-interface ArchNode { id:string; label:string; tech:string; x:number; y:number; color:string; description:string; latency:string; throughput:string }
-interface ArchEdge { from:string; to:string; label:string; dashed?:boolean }
-
-const NODES: ArchNode[] = [
-  { id:'edge',    label:'Edge Runtime',  tech:'Next.js / Vercel',    x:50, y:9,  color:'#D4FF00', description:'Global CDN at 300+ PoPs. Auth middleware, rate limiting, geo-routing at sub-5ms globally.',                                latency:'4ms',    throughput:'500K req/s' },
-  { id:'gateway', label:'API Gateway',   tech:'Kong / AWS API GW',   x:50, y:25, color:'#00F0FF', description:'L7 routing with JWT validation, mTLS, circuit breaker, and request coalescing for downstream protection.',            latency:'8ms',    throughput:'200K req/s' },
-  { id:'kafka',   label:'Event Bus',     tech:'Apache Kafka',         x:18, y:50, color:'#FF6B35', description:'Durable event streaming with 7-day retention. Powers async microservice comms and event sourcing.',                     latency:'2ms',    throughput:'12M events/day' },
-  { id:'redis',   label:'Cache Layer',   tech:'Redis Cluster',        x:50, y:50, color:'#FF4444', description:'Write-through cache with TTL-based invalidation. 94% hit rate. Pub/Sub for real-time features.',                       latency:'0.5ms',  throughput:'1M ops/s' },
-  { id:'workers', label:'Worker Pool',   tech:'Node.js / Bun',        x:82, y:50, color:'#A855F7', description:'Horizontally scaled workers consuming Kafka topics. Handles async jobs, webhooks, email, background tasks.',            latency:'50ms',   throughput:'10K jobs/min' },
-  { id:'postgres',label:'Primary DB',    tech:'PostgreSQL 16',         x:34, y:75, color:'#3B82F6', description:'ACID-compliant primary with 2 async replicas. Row-level security, JSONB, pgvector for vector embeddings.',              latency:'3ms',    throughput:'50K queries/s' },
-  { id:'replica', label:'Read Replicas', tech:'PG Streaming',          x:66, y:75, color:'#2563EB', description:'Async streaming replication with <100ms lag. Load-balanced via PgBouncer connection pooling.',                         latency:'<1ms lag',throughput:'150K reads/s' },
-  { id:'vector',  label:'Vector DB',     tech:'Pinecone / pgvector',   x:50, y:92, color:'#10B981', description:'ANN search over 2.1M vectors. Powers semantic search, recommendations, and hybrid queries.',                           latency:'15ms',   throughput:'10K searches/s' },
+const NODES = [
+  { id: 'edge',     label: 'Edge Runtime',  tech: 'Next.js / Vercel',    x: 50, y: 8,  color: '#D4FF00', latency: '4ms',    throughput: '500K req/s',    description: 'Глобальная CDN в 300+ точках присутствия. Auth-middleware, rate limiting, гео-роутинг с задержкой менее 5ms по всему миру.' },
+  { id: 'gateway',  label: 'API Gateway',   tech: 'Kong / AWS API GW',   x: 50, y: 26, color: '#00F0FF', latency: '8ms',    throughput: '200K req/s',    description: 'L7-роутинг с JWT-валидацией, mTLS, circuit breaker и коалесцированием запросов.' },
+  { id: 'kafka',    label: 'Event Bus',     tech: 'Apache Kafka',         x: 18, y: 50, color: '#FF6B35', latency: '2ms',    throughput: '12M событий/д', description: 'Надёжный стриминг событий, хранение 7 дней, асинхронная коммуникация между сервисами.' },
+  { id: 'redis',    label: 'Cache Layer',   tech: 'Redis Cluster',        x: 50, y: 50, color: '#FF4444', latency: '0.5ms',  throughput: '1M ops/s',      description: 'Write-through кэш, TTL-инвалидация, hit rate 94%. Pub/Sub для real-time функций.' },
+  { id: 'workers',  label: 'Worker Pool',   tech: 'Node.js / Bun',        x: 82, y: 50, color: '#A855F7', latency: '50ms',   throughput: '10K задач/мин', description: 'Горизонтально масштабируемые воркеры, потребляющие Kafka. Async-задачи, вебхуки, email.' },
+  { id: 'postgres', label: 'Primary DB',    tech: 'PostgreSQL 16',         x: 34, y: 76, color: '#3B82F6', latency: '3ms',    throughput: '50K запросов/с', description: 'ACID-совместимая первичная БД, 2 async-реплики, RLS, JSONB, pgvector.' },
+  { id: 'replica',  label: 'Read Replicas', tech: 'PG Streaming',          x: 66, y: 76, color: '#2563EB', latency: '<1ms',   throughput: '150K чтений/с', description: 'Async-репликация, лаг менее 100ms, пулинг соединений через PgBouncer.' },
+  { id: 'vector',   label: 'Vector DB',     tech: 'pgvector / Pinecone',   x: 50, y: 93, color: '#10B981', latency: '15ms',   throughput: '10K поисков/с', description: 'ANN-поиск по 2.1M векторов, семантический поиск, рекомендации.' },
 ]
 
-const EDGES: ArchEdge[] = [
-  { from:'edge',    to:'gateway',  label:'HTTPS/2' },
-  { from:'gateway', to:'kafka',    label:'Produce',   dashed:true },
-  { from:'gateway', to:'redis',    label:'Cache' },
-  { from:'gateway', to:'workers',  label:'Delegate',  dashed:true },
-  { from:'kafka',   to:'workers',  label:'Consume' },
-  { from:'redis',   to:'postgres', label:'Miss' },
-  { from:'workers', to:'postgres', label:'Write' },
-  { from:'postgres',to:'replica',  label:'Replicate' },
-  { from:'postgres',to:'vector',   label:'Embed',     dashed:true },
+const EDGES = [
+  { from: 'edge',    to: 'gateway', label: 'HTTPS/2' },
+  { from: 'gateway', to: 'kafka',   label: 'Produce', dashed: true },
+  { from: 'gateway', to: 'redis',   label: 'Cache' },
+  { from: 'gateway', to: 'workers', label: 'Delegate', dashed: true },
+  { from: 'kafka',   to: 'workers', label: 'Consume' },
+  { from: 'redis',   to: 'postgres', label: 'Miss' },
+  { from: 'workers', to: 'postgres', label: 'Write' },
+  { from: 'postgres', to: 'replica', label: 'Replicate' },
+  { from: 'postgres', to: 'vector',  label: 'Embed', dashed: true },
 ]
 
-const SIM_PATHS = [
-  ['edge','gateway','redis'],
-  ['edge','gateway','redis','postgres'],
-  ['edge','gateway','kafka','workers','postgres'],
+const PATHS = [
+  ['edge', 'gateway', 'redis'],
+  ['edge', 'gateway', 'redis', 'postgres'],
+  ['edge', 'gateway', 'kafka', 'workers', 'postgres'],
 ]
 
 const nodeById = (id: string) => NODES.find((n) => n.id === id)
 
 export default function ArchVisualizer() {
-  const [activeNode, setActiveNode] = useState<ArchNode | null>(null)
-  const [simPath, setSimPath]       = useState<string[]>([])
-  const [pingMap, setPingMap]       = useState<Record<string,number>>({})
+  const [active, setActive] = useState<typeof NODES[0] | null>(null)
+  const [sim, setSim] = useState<string[]>([])
+  const [pings, setPings] = useState<Record<string, number>>({})
   const { click, sweep } = useAudio()
-  const simTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const runSim = useCallback((clickedId: string) => {
-    const path = SIM_PATHS.find((p) => p.includes(clickedId)) ?? SIM_PATHS[Math.floor(Math.random() * SIM_PATHS.length)]
-    setSimPath([])
-    path.forEach((nodeId, i) => {
+  const runSim = useCallback((id: string) => {
+    const path = PATHS.find((p) => p.includes(id)) ?? PATHS[0]
+    setSim([])
+    const tids = path.map((nid, i) =>
       setTimeout(() => {
-        setSimPath((prev) => [...prev, nodeId])
-        sweep(100 + i * 60)
-        setPingMap((prev) => ({ ...prev, [nodeId]: Math.floor(Math.random() * 10 + 2) }))
-      }, i * 400)
-    })
-    if (simTimerRef.current) clearTimeout(simTimerRef.current)
-    simTimerRef.current = setTimeout(() => setSimPath([]), path.length * 400 + 700)
+        setSim((prev) => [...prev, nid])
+        sweep(100 + i * 55)
+        setPings((prev) => ({ ...prev, [nid]: Math.floor(Math.random() * 10 + 2) }))
+      }, i * 400),
+    )
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => setSim([]), path.length * 400 + 900)
+    return () => tids.forEach(clearTimeout)
   }, [sweep])
 
-  const handleNodeClick = useCallback((node: ArchNode) => {
+  const onNode = useCallback((n: typeof NODES[0]) => {
     click()
-    setActiveNode((prev) => prev?.id === node.id ? null : node)
-    runSim(node.id)
+    setActive((prev) => (prev?.id === n.id ? null : n))
+    runSim(n.id)
   }, [click, runSim])
 
   useEffect(() => {
-    const iv = setInterval(() => {
-      setPingMap((prev) => {
-        const next = { ...prev }
-        for (const k of Object.keys(next)) next[k] = Math.max(1, next[k] + Math.floor(Math.random() * 5 - 2))
-        return next
-      })
-    }, 1800)
-    return () => clearInterval(iv)
+    const iv = setInterval(() => setPings((p) => {
+      const next = { ...p }
+      for (const k of Object.keys(next)) next[k] = Math.max(1, next[k] + Math.floor(Math.random() * 5 - 2))
+      return next
+    }), 1800)
+    return () => { clearInterval(iv); if (timer.current) clearTimeout(timer.current) }
   }, [])
 
-  useEffect(() => () => { if (simTimerRef.current) clearTimeout(simTimerRef.current) }, [])
-
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-14">
-      <div className="mb-12">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="block w-8 h-px flex-shrink-0" style={{ background:'#D4FF00' }} />
-          <span className="font-mono text-xs tracking-widest uppercase" style={{ color:'#D4FF00' }}>Architecture</span>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(24px,6vw,96px)' }}>
+      {/* Шапка */}
+      <div style={{ marginBottom: 48 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <span style={{ width: 32, height: 1, background: '#D4FF00', flexShrink: 0 }} />
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#D4FF00' }}>Архитектура</span>
         </div>
-        <h2 className="font-bold leading-tight mb-4" style={{ fontSize:'clamp(2rem,5vw,3.5rem)', color:'#F5F4F2' }}>
-          Distributed System <span style={{ color:'#D4FF00' }}>Architecture</span>
+        <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 'clamp(2rem,5vw,3.5rem)', color: '#F5F4F2', lineHeight: 1.05 }}>
+          Распределённая Система
+          <br /><span style={{ color: '#D4FF00' }}>Архитектура</span>
         </h2>
-        <p style={{ fontSize:'clamp(0.875rem,1.6vw,1rem)', color:'#A8A6A2', maxWidth:'36rem' }}>
-          Click any node to inspect its role and trigger a live request lifecycle simulation.
+        <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 15, color: '#A8A6A2', maxWidth: 480, marginTop: 12 }}>
+          Нажмите на любой узел, чтобы симулировать жизненный цикл запроса с телеметрией в реальном времени.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-        {/* SVG Graph */}
-        <div
-          className="rounded-2xl overflow-hidden border"
-          style={{ background:'#0E0E0E', borderColor:'#242424' }}
-        >
-          <svg
-            viewBox="0 0 100 100"
-            style={{ width:'100%', height:'auto', aspectRatio:'1.4/1' }}
-            preserveAspectRatio="xMidYMid meet"
-            role="img"
-            aria-label="System architecture diagram — click nodes to interact"
-          >
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' }}>
+        {/* SVG граф */}
+        <div style={{ background: '#111', border: '1px solid #2A2A2A', borderRadius: 16, overflow: 'hidden' }}>
+          <svg viewBox="0 0 100 100" style={{ width: '100%', height: 'auto', aspectRatio: '4/3' }}
+               preserveAspectRatio="xMidYMid meet" role="img" aria-label="Диаграмма архитектуры">
             <defs>
-              <pattern id="ag" width="10" height="10" patternUnits="userSpaceOnUse">
-                <path d="M10 0L0 0 0 10" fill="none" stroke="#1A1A1A" strokeWidth="0.15"/>
+              <pattern id="g2" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M10 0L0 0 0 10" fill="none" stroke="#191919" strokeWidth="0.15" />
               </pattern>
             </defs>
-            <rect width="100" height="100" fill="url(#ag)"/>
+            <rect width="100" height="100" fill="url(#g2)" />
 
-            {EDGES.map((edge, i) => {
-              const fn = nodeById(edge.from); const tn = nodeById(edge.to)
-              if (!fn || !tn) return null
-              const isActive = simPath.includes(edge.from) && simPath.includes(edge.to)
-              const mx = (fn.x + tn.x) / 2; const my = (fn.y + tn.y) / 2
+            {EDGES.map((e, i) => {
+              const f = nodeById(e.from), t = nodeById(e.to)
+              if (!f || !t) return null
+              const lit = sim.includes(e.from) && sim.includes(e.to)
               return (
                 <g key={i}>
-                  <line x1={fn.x} y1={fn.y} x2={tn.x} y2={tn.y}
-                    stroke={isActive ? fn.color : '#2A2A2A'}
-                    strokeWidth={isActive ? '0.55' : '0.22'}
-                    strokeDasharray={edge.dashed ? '1.8 1' : undefined}
-                    style={{ transition:'stroke 0.28s,stroke-width 0.28s' }}
-                  />
-                  <text x={mx} y={my - 1.2} textAnchor="middle"
-                    style={{ fontSize:'1.6px', fill:'#383838', fontFamily:'JetBrains Mono,monospace' }}
-                  >{edge.label}</text>
+                  <line x1={f.x} y1={f.y} x2={t.x} y2={t.y}
+                    stroke={lit ? f.color : '#252525'} strokeWidth={lit ? '0.55' : '0.2'}
+                    strokeDasharray={e.dashed ? '1.5 1' : undefined}
+                    style={{ transition: 'stroke 0.3s, stroke-width 0.3s' }} />
+                  <text x={(f.x + t.x) / 2} y={(f.y + t.y) / 2 - 1.2} textAnchor="middle"
+                    style={{ fontSize: '1.3px', fill: '#2E2E2E', fontFamily: 'JetBrains Mono, monospace' }}>
+                    {e.label}
+                  </text>
                 </g>
               )
             })}
 
-            {NODES.map((node) => {
-              const isActive = activeNode?.id === node.id
-              const inPath   = simPath.includes(node.id)
+            {NODES.map((n) => {
+              const isActive = active?.id === n.id
+              const inSim = sim.includes(n.id)
               return (
-                <g key={node.id} onClick={() => handleNodeClick(node)}
-                  style={{ cursor:'pointer' }} role="button" tabIndex={0}
-                  aria-label={`Inspect ${node.label}`}
-                  onKeyDown={(e) => { if (e.key==='Enter'||e.key===' ') handleNodeClick(node) }}
-                >
-                  {(isActive || inPath) && (
-                    <circle cx={node.x} cy={node.y} r="7.2"
-                      fill="none" stroke={node.color} strokeWidth="0.35" opacity="0.28"
-                    />
+                <g key={n.id} onClick={() => onNode(n)} style={{ cursor: 'pointer' }}
+                   role="button" tabIndex={0} aria-label={`Инспектировать ${n.label}`}
+                   onKeyDown={(ev) => { if (ev.key === 'Enter') onNode(n) }}>
+                  {(isActive || inSim) && (
+                    <circle cx={n.x} cy={n.y} r="7" fill="none"
+                      stroke={n.color} strokeWidth="0.35" opacity="0.3" />
                   )}
-                  <rect
-                    x={node.x-8} y={node.y-4.5} width="16" height="9" rx="1.2"
-                    fill={isActive||inPath ? '#1E1E1E' : '#171717'}
-                    stroke={isActive||inPath ? node.color : '#282828'}
-                    strokeWidth={isActive ? '0.55' : '0.22'}
-                    style={{ transition:'all 0.28s' }}
-                  />
-                  <circle cx={node.x-6} cy={node.y} r="1"
-                    fill={inPath ? node.color : '#383838'}
-                    style={{ transition:'fill 0.22s' }}
-                  />
-                  <text x={node.x-3.8} y={node.y-0.8}
-                    style={{ fontSize:'2.4px', fill:isActive||inPath?'#F5F4F2':'#A8A6A2', fontFamily:"Space Grotesk,sans-serif", fontWeight:'600', transition:'fill 0.28s' }}
-                  >{node.label}</text>
-                  <text x={node.x-3.8} y={node.y+2}
-                    style={{ fontSize:'1.7px', fill:node.color, fontFamily:'JetBrains Mono,monospace', opacity:0.82 }}
-                  >{node.tech}</text>
-                  {pingMap[node.id] !== undefined && (
-                    <text x={node.x+7.5} y={node.y-2.5} textAnchor="end"
-                      style={{ fontSize:'1.6px', fill:'#D4FF00', fontFamily:'JetBrains Mono,monospace' }}
-                    >{pingMap[node.id]}ms</text>
+                  <rect x={n.x - 7.8} y={n.y - 4.2} width="15.6" height="8.4" rx="1.2"
+                    fill={isActive || inSim ? '#1C1C1C' : '#161616'}
+                    stroke={isActive || inSim ? n.color : '#252525'}
+                    strokeWidth={isActive ? '0.5' : '0.2'}
+                    style={{ transition: 'all 0.3s' }} />
+                  <circle cx={n.x - 6} cy={n.y} r="1" fill={inSim ? n.color : '#333'}
+                    style={{ transition: 'fill 0.25s' }} />
+                  <text x={n.x - 3.8} y={n.y - 1}
+                    style={{ fontSize: '2.2px', fill: isActive || inSim ? '#F5F4F2' : '#A0A0A0', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '600', transition: 'fill 0.3s' }}>
+                    {n.label}
+                  </text>
+                  <text x={n.x - 3.8} y={n.y + 2}
+                    style={{ fontSize: '1.6px', fill: n.color, opacity: 0.85, fontFamily: 'JetBrains Mono, monospace' }}>
+                    {n.tech}
+                  </text>
+                  {pings[n.id] !== undefined && (
+                    <text x={n.x + 6.8} y={n.y - 2} textAnchor="end"
+                      style={{ fontSize: '1.5px', fill: '#D4FF00', fontFamily: 'JetBrains Mono, monospace' }}>
+                      {pings[n.id]}ms
+                    </text>
                   )}
                 </g>
               )
@@ -173,64 +155,55 @@ export default function ArchVisualizer() {
           </svg>
         </div>
 
-        {/* Inspector + lifecycle log */}
-        <div className="flex flex-col gap-4">
+        {/* Панель инспектора */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <AnimatePresence mode="wait">
-            {activeNode ? (
-              <motion.div key={activeNode.id}
-                initial={{ opacity:0, x:14 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:14 }}
-                transition={{ duration:0.28, ease:[0.19,1,0.22,1] }}
-                className="p-5 rounded-2xl border"
-                style={{ background:'#111111', borderColor:'#222222' }}
+            {active ? (
+              <motion.div key={active.id}
+                initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.28 }}
+                style={{ padding: 24, background: '#111', border: '1px solid #2A2A2A', borderRadius: 16 }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="font-mono tracking-widest uppercase mb-1" style={{ fontSize:'9px', color:activeNode.color }}>Node Inspector</div>
-                    <h3 className="text-xl font-bold" style={{ color:'#F5F4F2' }}>{activeNode.label}</h3>
-                    <div className="font-mono text-sm mt-0.5" style={{ color:'#787672' }}>{activeNode.tech}</div>
-                  </div>
-                  <div className="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0" style={{ background:activeNode.color }} />
-                </div>
-                <p className="text-sm leading-relaxed mb-5" style={{ color:'#A8A6A2' }}>{activeNode.description}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {[{label:'P99 Latency',value:activeNode.latency},{label:'Throughput',value:activeNode.throughput}].map((m) => (
-                    <div key={m.label} className="p-3 rounded-xl border" style={{ background:'#181818', borderColor:'#222222' }}>
-                      <div className="font-mono tracking-widest uppercase mb-1" style={{ fontSize:'8px', color:'#383838' }}>{m.label}</div>
-                      <div className="font-mono font-bold text-base" style={{ color:activeNode.color }}>{m.value}</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: active.color, marginBottom: 6 }}>Инспектор узла</div>
+                <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 700, color: '#F5F4F2' }}>{active.label}</h3>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#A8A6A2', marginBottom: 16 }}>{active.tech}</div>
+                <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 14, color: '#A8A6A2', lineHeight: 1.6, marginBottom: 20 }}>{active.description}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {[{ l: 'P99 задержка', v: active.latency }, { l: 'Пропускная способность', v: active.throughput }].map((m) => (
+                    <div key={m.l} style={{ padding: 14, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 12 }}>
+                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#333', marginBottom: 6 }}>{m.l}</div>
+                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, color: active.color }}>{m.v}</div>
                     </div>
                   ))}
                 </div>
               </motion.div>
             ) : (
-              <motion.div key="idle" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-                className="p-5 rounded-2xl border flex items-center justify-center text-center"
-                style={{ background:'#111111', borderColor:'#1A1A1A', minHeight:'180px' }}
-              >
-                <div>
-                  <div className="font-mono tracking-widest uppercase mb-2" style={{ fontSize:'9px', color:'#2A2A2A' }}>Node Inspector</div>
-                  <p style={{ fontSize:'13px', color:'#2A2A2A' }}>Click any node to inspect and simulate a request lifecycle.</p>
-                </div>
+              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ padding: 24, background: '#111', border: '1px solid #1A1A1A', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, textAlign: 'center' }}>
+                <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 14, color: '#2A2A2A' }}>
+                  Нажмите на узел для инспекции
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div className="p-4 rounded-2xl border font-mono" style={{ background:'#0D0D0D', borderColor:'#1A1A1A', fontSize:'12px' }}>
-            <div className="tracking-widest uppercase mb-3" style={{ fontSize:'8px', color:'#272727' }}>Request Lifecycle</div>
+          {/* Лог жизненного цикла */}
+          <div style={{ padding: 16, background: '#0D0D0D', border: '1px solid #1A1A1A', borderRadius: 16, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
+            <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#252525', marginBottom: 12 }}>Жизненный цикл запроса</div>
             <AnimatePresence>
-              {simPath.length > 0 ? simPath.map((id, i) => {
+              {sim.length > 0 ? sim.map((id, i) => {
                 const n = nodeById(id)
                 return (
-                  <motion.div key={`${id}-${i}`}
-                    initial={{ opacity:0, x:-5 }} animate={{ opacity:1, x:0 }}
-                    className="flex items-center gap-2 py-[3px]"
-                    style={{ color:n?.color??'#A8A6A2' }}
-                  >
-                    <span style={{ color:'#D4FF00' }}>{String(i+1).padStart(2,'0')}</span>
-                    <span>{n?.label??id}</span>
-                    <span className="ml-auto" style={{ color:'#333' }}>{pingMap[id]}ms</span>
+                  <motion.div key={`${id}-${i}`} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+                    style={{ display: 'flex', gap: 8, padding: '3px 0', color: n?.color ?? '#A8A6A2' }}>
+                    <span style={{ color: '#D4FF00' }}>{String(i + 1).padStart(2, '0')}</span>
+                    <span>{n?.label ?? id}</span>
+                    <span style={{ marginLeft: 'auto', color: '#333' }}>{pings[id]}ms</span>
                   </motion.div>
                 )
-              }) : <div style={{ color:'#252525' }}>{'> Awaiting simulation...'}</div>}
+              }) : (
+                <div style={{ color: '#252525' }}>{'> Ожидание симуляции...'}</div>
+              )}
             </AnimatePresence>
           </div>
         </div>

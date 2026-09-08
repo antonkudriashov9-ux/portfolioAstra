@@ -171,21 +171,21 @@ export async function verifySignature(
 const DIFFS = [
   {
     id: 'n1',
-    label: 'N+1 Query Fix',
-    before: { label: 'Junior - N+1 Pattern', code: BEFORE_N1 },
-    after: { label: 'Senior - DataLoader Batch', code: AFTER_N1 },
+    label: 'Устранение N+1',
+    before: { label: 'Junior — N+1 паттерн', code: BEFORE_N1 },
+    after:  { label: 'Senior — DataLoader батчинг', code: AFTER_N1 },
   },
   {
     id: 'worker',
-    label: 'Web Worker Offload',
-    before: { label: 'Junior - Main Thread', code: BEFORE_WORKER },
-    after: { label: 'Senior - Worker Offload', code: AFTER_WORKER },
+    label: 'Web Worker перенос',
+    before: { label: 'Junior — основной поток', code: BEFORE_WORKER },
+    after:  { label: 'Senior — Web Worker', code: AFTER_WORKER },
   },
   {
     id: 'wasm',
-    label: 'Rust WASM Acceleration',
-    before: { label: 'JS - Pure JavaScript', code: BEFORE_WASM },
-    after: { label: 'Rust WASM - Same API', code: AFTER_WASM },
+    label: 'Ускорение Rust WASM',
+    before: { label: 'JS — чистый JavaScript', code: BEFORE_WASM },
+    after:  { label: 'Rust WASM — тот же API', code: AFTER_WASM },
   },
 ]
 
@@ -206,33 +206,33 @@ export default function DiffViewer() {
   return (
     <div className="max-w-7xl mx-auto px-6 md:px-14">
       <style>{`
-        .line-bad { color: #FF5F57; }
-        .line-good { color: #28C840; }
+        .line-bad     { color: #FF5F57; }
+        .line-good    { color: #28C840; }
         .line-comment { color: #444; }
-        .line-normal { color: #C8C5BF; }
+        .line-normal  { color: #C8C5BF; }
       `}</style>
 
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-4">
           <span className="block w-8 h-px" style={{ background: '#D4FF00' }} />
           <span className="font-mono text-xs tracking-widest uppercase" style={{ color: '#D4FF00' }}>
-            Code Quality
+            Качество кода
           </span>
         </div>
         <h2
           className="font-bold leading-tight mb-4"
           style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#F5F4F2' }}
         >
-          Before / After
+          До / После
           <br />
-          <span style={{ color: '#D4FF00' }}>Refactoring</span>
+          <span style={{ color: '#D4FF00' }}>Рефакторинга</span>
         </h2>
         <p
           className="max-w-xl"
-          style={{ fontSize: 'clamp(0.875rem, 1.7vw, 1rem)', color: '#A8A6A2' }}
+          style={{ fontSize: 'clamp(0.875rem, 1.7vw, 1rem)', color: '#A8A6A2', lineHeight: 1.65 }}
         >
-          Junior antipatterns transformed into senior-grade solutions with
-          measured, real performance improvements.
+          Антипаттерны junior-уровня, трансформированные в production-ready решения
+          с измеримыми улучшениями производительности.
         </p>
       </div>
 
@@ -271,7 +271,7 @@ export default function DiffViewer() {
                     : '2px solid transparent',
                 }}
               >
-                {s}
+                {s === 'before' ? 'До' : 'После'}
               </button>
             ))}
           </div>

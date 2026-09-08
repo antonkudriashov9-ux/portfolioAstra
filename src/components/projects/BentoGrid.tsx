@@ -3,118 +3,107 @@ import { useAudio } from '../../hooks/useAudio'
 
 const ITEMS = [
   {
-    id: 'b1', span: 2,
-    tag: 'Infrastructure', accent: '#D4FF00',
-    title: 'Blue/Green Deployment Pipeline',
-    description: 'Zero-downtime deploys across 4 microservices with automated smoke tests, canary traffic shifting via feature flags, and instant rollback in under 30 seconds.',
-    metrics: ['Zero downtime', '99.97% uptime', '4 services'],
+    id: 'b1', span: 2, tag: 'Инфраструктура',
+    title: 'Blue/Green пайплайн деплоя',
+    description: 'Zero-downtime деплой для 4 микросервисов с автоматическими smoke-тестами, canary-шифтингом трафика через feature flags и мгновенным откатом за менее 30 секунд.',
+    metrics: ['Zero downtime', '99.97% аптайм', '4 сервиса'], accent: '#D4FF00',
   },
   {
-    id: 'b2', span: 1,
-    tag: 'Performance', accent: '#00F0FF',
-    title: 'N+1 Query Elimination',
-    description: 'Resolved N+1 patterns via DataLoader batching, cutting database round-trips by 94% and dropping P50 to 3ms.',
-    metrics: ['-94% DB calls', '3ms P50'],
+    id: 'b2', span: 1, tag: 'Производительность',
+    title: 'Устранение N+1 запросов',
+    description: 'Обнаружены и устранены N+1 паттерны на уровне ORM через DataLoader-батчинг — количество обращений к БД снизилось на 94%.',
+    metrics: ['-94% запросов к БД', '3ms avg P50'], accent: '#00F0FF',
   },
   {
-    id: 'b3', span: 1,
-    tag: 'Frontend', accent: '#A855F7',
-    title: 'Web Worker Image Pipeline',
-    description: 'EXIF parsing and thumbnail generation moved to Web Workers. Zero main-thread jank on upload flows regardless of file size.',
-    metrics: ['0ms jank', 'Worker offload'],
+    id: 'b3', span: 1, tag: 'Фронтенд',
+    title: 'Web Worker для изображений',
+    description: 'Парсинг EXIF и генерация превью вынесены в Web Worker. Нулевой фриз основного потока при загрузке файлов любого размера.',
+    metrics: ['0ms заморозки', 'Перенос в Worker'], accent: '#A855F7',
   },
   {
-    id: 'b4', span: 1,
-    tag: 'Observability', accent: '#FF6B35',
-    title: 'OpenTelemetry Tracing',
-    description: 'Distributed tracing across all microservices with sub-millisecond overhead and full Jaeger visualization.',
-    metrics: ['<1ms overhead', 'Full stack trace'],
+    id: 'b4', span: 1, tag: 'Наблюдаемость',
+    title: 'Трассировка OpenTelemetry',
+    description: 'Распределённая трассировка всех микросервисов с инструментальными накладными расходами менее 1ms и полной визуализацией в Jaeger.',
+    metrics: ['<1ms накладные', 'Полный стек трейсов'], accent: '#FF6B35',
   },
   {
-    id: 'b5', span: 2,
-    tag: 'Rust / WASM', accent: '#10B981',
-    title: 'Rust WASM Crypto Module',
-    description: 'Replaced JS crypto with Rust compiled to WebAssembly. 8x throughput improvement on signature verification with an identical TypeScript API surface.',
-    metrics: ['8x faster', 'WASM runtime', 'Same API'],
+    id: 'b5', span: 2, tag: 'Rust / WASM',
+    title: 'Rust WASM Crypto модуль',
+    description: 'Заменил JS-крипто на Rust, скомпилированный в WebAssembly. Рост пропускной способности в 8x при верификации подписей с идентичным TypeScript API.',
+    metrics: ['8x быстрее', 'WASM runtime', 'Тот же API'], accent: '#10B981',
   },
-] as const
-
-function Card({ item, index }: { item: typeof ITEMS[number]; index: number }) {
-  const { hover } = useAudio()
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-48px' }}
-      transition={{ duration: 0.65, delay: index * 0.07, ease: [0.19, 1, 0.22, 1] }}
-      onMouseEnter={hover}
-      style={{
-        gridColumn: `span ${item.span}`,
-        background: '#111111',
-        borderColor: '#222222',
-      }}
-      className="relative p-6 md:p-7 rounded-2xl border overflow-hidden group"
-    >
-      {/* Hover glow */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 0% 0%,${item.accent}09 0%,transparent 65%)` }}
-      />
-
-      <div
-        className="inline-flex items-center font-mono tracking-widest uppercase mb-4 px-2 py-0.5 border"
-        style={{ fontSize: '9px', borderColor: `${item.accent}40`, color: item.accent }}
-      >
-        {item.tag}
-      </div>
-
-      <h3 className="font-bold mb-2.5 leading-snug" style={{ fontSize: 'clamp(0.95rem,1.4vw,1.1rem)', color: '#F5F4F2' }}>
-        {item.title}
-      </h3>
-      <p className="text-sm leading-relaxed mb-5" style={{ color: '#787672' }}>
-        {item.description}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {item.metrics.map((m) => (
-          <span
-            key={m}
-            className="font-mono text-xs font-semibold px-2.5 py-1 rounded"
-            style={{ background: `${item.accent}15`, color: item.accent }}
-          >
-            {m}
-          </span>
-        ))}
-      </div>
-    </motion.div>
-  )
-}
+]
 
 export default function BentoGrid() {
+  const { hover } = useAudio()
   return (
-    <section className="py-28 px-6 md:px-14" style={{ background: '#0A0A0A' }}>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="block w-8 h-px flex-shrink-0" style={{ background: '#D4FF00' }} />
-            <span className="font-mono text-xs tracking-widest uppercase" style={{ color: '#D4FF00' }}>Proof of Work</span>
+    <section style={{ background: '#0A0A0A', padding: 'clamp(60px,8vw,96px) clamp(24px,6vw,96px)' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .bento-item-span2 { grid-column: span 1 !important; }
+          .bento-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {/* Шапка */}
+        <div style={{ marginBottom: 48 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <span style={{ width: 32, height: 1, background: '#D4FF00', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#D4FF00' }}>
+              Доказательство компетентности
+            </span>
           </div>
-          <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem,5vw,3.5rem)', color: '#F5F4F2' }}>
-            Engineering
-            <br />
-            <span style={{ color: '#D4FF00' }}>Deep Cuts</span>
+          <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#F5F4F2', lineHeight: 1.05 }}>
+            Инженерные
+            <br /><span style={{ color: '#D4FF00' }}>Решения</span>
           </h2>
         </div>
 
-        {/* Asymmetric 3-col bento */}
+        {/* Сетка */}
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '1rem',
-          }}
+          className="bento-grid"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}
         >
-          {ITEMS.map((item, i) => <Card key={item.id} item={item} index={i} />)}
+          {ITEMS.map((item, i) => (
+            <motion.div
+              key={item.id}
+              className={item.span === 2 ? 'bento-item-span2' : undefined}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.6, delay: i * 0.07, ease: [0.19, 1, 0.22, 1] }}
+              onMouseEnter={hover}
+              style={{
+                gridColumn: `span ${item.span}`,
+                position: 'relative', padding: '28px 28px 24px',
+                background: '#111111', border: '1px solid #2A2A2A',
+                borderRadius: 16, overflow: 'hidden',
+              }}
+            >
+              {/* Тег */}
+              <div style={{
+                display: 'inline-block', fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
+                padding: '3px 8px', border: `1px solid ${item.accent}30`,
+                color: item.accent, marginBottom: 16,
+              }}>{item.tag}</div>
+
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 17, fontWeight: 700, color: '#F5F4F2', marginBottom: 10, lineHeight: 1.3 }}>{item.title}</h3>
+              <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 14, color: '#A8A6A2', lineHeight: 1.65, marginBottom: 20 }}>
+                {item.description}
+              </p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {item.metrics.map((m) => (
+                  <span key={m} style={{
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 600,
+                    padding: '4px 10px', borderRadius: 4,
+                    background: `${item.accent}18`, color: item.accent,
+                  }}>{m}</span>
+                ))}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

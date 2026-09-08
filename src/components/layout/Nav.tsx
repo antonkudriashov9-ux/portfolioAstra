@@ -4,10 +4,10 @@ import { useStore } from '../../store/useStore'
 import { useAudio } from '../../hooks/useAudio'
 
 const NAV_LINKS = [
-  { label: 'Projects', href: '#projects' },
-  { label: 'Architecture', href: '#architecture' },
-  { label: 'Code', href: '#code' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Проекты', href: '#projects' },
+  { label: 'Архитектура', href: '#architecture' },
+  { label: 'Код', href: '#code' },
+  { label: 'Контакты', href: '#contact' },
 ]
 
 export default function Nav() {
@@ -39,7 +39,7 @@ export default function Nav() {
           style={{ color: '#D4FF00' }}
           onClick={click}
         >
-          AK<span style={{ color: '#F5F4F2' }}>.dev</span>
+          АК<span style={{ color: '#F5F4F2' }}>.dev</span>
         </a>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -72,9 +72,9 @@ export default function Nav() {
             el.style.background = 'transparent'
             el.style.color = '#D4FF00'
           }}
-          aria-label="Open terminal (Cmd+K)"
+          aria-label="Открыть терминал (Cmd+K)"
         >
-          Terminal_
+          Терминал_
         </button>
       </div>
     </motion.header>

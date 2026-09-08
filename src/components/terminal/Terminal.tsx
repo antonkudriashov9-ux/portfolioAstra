@@ -17,24 +17,24 @@ const BANNER = `
 |  _  || . \|  _||  _ < / __/| |_| |
 |_| |_||_|\_\_|  |_| \_\_____|\___/
 
-  astra-shell v2.4.1  |  Cmd+K to toggle
-  Type "help" for available commands.
+  astra-shell v2.4.1  |  Cmd+K — переключить
+  Введите «help» для списка команд.
 `.trim()
 
 const PROMPT = 'anton@astra:~$ '
 
-const GIT_LOG = `* a3f82c1 (HEAD -> main) feat: add Kafka consumer lag monitoring
-* 9d2e41b perf: Redis cache hit rate 94% - reduced DB round trips
-* c7f19a3 fix: eliminate N+1 query in user feed aggregation
-* 4b8e2f0 feat: WebGL particle system with custom GLSL shaders
-* 1a9c3d7 refactor: migrate auth to Next.js edge runtime
-* f2b8e5a feat: pgvector integration for semantic search
-* 88e1d29 ci: zero-downtime blue/green deployment pipeline
-* 3c4f910 perf: Web Worker offload for image processing pipeline
-* b7a2e18 feat: OpenTelemetry distributed tracing integration
-* 9f3c1a2 init: project scaffolding`.trim()
+const GIT_LOG = `* a3f82c1 (HEAD -> main) feat: мониторинг задержки Kafka consumers
+* 9d2e41b perf: Redis hit rate 94% — сокращены обращения к БД
+* c7f19a3 fix: устранён N+1 в агрегации user feed
+* 4b8e2f0 feat: WebGL частицы с кастомными GLSL шейдерами
+* 1a9c3d7 refactor: миграция auth на Next.js edge runtime
+* f2b8e5a feat: интеграция pgvector для семантического поиска
+* 88e1d29 ci: zero-downtime blue/green деплой пайплайн
+* 3c4f910 perf: Web Worker для пайплайна обработки изображений
+* b7a2e18 feat: распределённая трассировка OpenTelemetry
+* 9f3c1a2 init: инициализация проекта`.trim()
 
-const BENCHMARKS = `BENCHMARK RESULTS  [${new Date().toISOString().split('T')[0]}]
+const BENCHMARKS = `РЕЗУЛЬТАТЫ БЕНЧМАРКОВ  [${new Date().toISOString().split('T')[0]}]
 --------------------------------------------------
 API Gateway         P50:  6ms   P95: 12ms  P99:  18ms
 Redis Cache         P50: 0.4ms  P95: 0.8ms P99: 1.2ms
@@ -44,42 +44,42 @@ Vector Search       P50: 10ms   P95: 20ms  P99:  35ms
 Edge CDN (EU)       P50:  3ms   P95:  7ms  P99:  11ms
 Kafka Produce       P50:  1ms   P95:  3ms  P99:   5ms
 --------------------------------------------------
-ALL ENDPOINTS WITHIN SLA`.trim()
+ВСЕ ЭНДПОИНТЫ В РАМКАХ SLA`.trim()
 
-const SYSTEM_CHECK = `SYSTEM HEALTH CHECK [v2.4.1]
+const SYSTEM_CHECK = `ПРОВЕРКА СОСТОЯНИЯ СИСТЕМ [v2.4.1]
 --------------------------------------------------
-[OK] Edge Runtime       ... healthy (12 active regions)
-[OK] API Gateway        ... healthy (auto-scaled x4)
-[OK] Kafka Cluster      ... healthy (consumer lag: 142)
-[OK] Redis Primary      ... healthy (memory: 68% used)
-[OK] PostgreSQL Primary ... healthy (conn: 47/200)
-[OK] Read Replica 1     ... healthy (lag: 18ms)
-[OK] Read Replica 2     ... healthy (lag: 22ms)
-[OK] Vector DB          ... healthy (2.1M vectors indexed)
-[OK] Worker Pool        ... healthy (queue depth: 23)
+[OK] Edge Runtime       ... исправен (12 регионов)
+[OK] API Gateway        ... исправен (auto-scaled x4)
+[OK] Kafka Cluster      ... исправен (consumer lag: 142)
+[OK] Redis Primary      ... исправен (memory: 68%)
+[OK] PostgreSQL Primary ... исправен (conn: 47/200)
+[OK] Read Replica 1     ... исправен (lag: 18ms)
+[OK] Read Replica 2     ... исправен (lag: 22ms)
+[OK] Vector DB          ... исправен (2.1M векторов)
+[OK] Worker Pool        ... исправен (queue depth: 23)
 --------------------------------------------------
-OVERALL STATUS: ALL SYSTEMS OPERATIONAL`.trim()
+ОБЩИЙ СТАТУС: ВСЕ СИСТЕМЫ РАБОТАЮТ`.trim()
 
-const BIO = `# Anton Kudriashov - Senior Full-Stack Engineer
+const BIO = `# Антон Кудряшов — Senior Full-Stack Engineer
 
-## About
-I architect and build distributed systems that handle millions of
-events daily. Specializing in the intersection of high-performance
-engineering and exceptional user experiences.
+## О себе
+Проектирую и создаю распределённые системы, обрабатывающие
+миллионы событий ежедневно. Специализируюсь на пересечении
+высокопроизводительной инженерии и исключительного UX.
 
-## Stack
-- Backend:  Node.js, Bun, Go, Rust (WASM modules)
+## Стек
+- Backend:  Node.js, Bun, Go, Rust (WASM модули)
 - Frontend: React 19, Next.js 15, WebGL, GSAP, Three.js
 - Data:     PostgreSQL, Redis, Apache Kafka, Pinecone
 - Infra:    Kubernetes, Terraform, AWS, Vercel Edge
 
-## Highlights
-- Reduced P99 API latency by 68% via Redis + edge caching
-- Engineered Kafka pipeline handling 12M events/day at zero loss
-- Shipped WebGL portfolio with custom GLSL shaders
-- Zero-downtime blue/green deploys across 4 microservices
+## Достижения
+- Снизил P99 задержку API на 68% через Redis + edge кэширование
+- Создал Kafka-пайплайн на 12M событий/день без потерь данных
+- Запустил WebGL портфолио с кастомными GLSL шейдерами
+- Zero-downtime blue/green деплой для 4 микросервисов
 
-## Contact
+## Контакты
 Email:  anton@astra.dev
 GitHub: github.com/antonkudriashov9-ux`.trim()
 
@@ -89,7 +89,7 @@ X-Request-Id: req_01JF4K2M8XVNP3Q7
 
 {
   "status": "success",
-  "message": "Contact request received",
+  "message": "Запрос на контакт получен",
   "data": {
     "email": "anton@astra.dev",
     "response_sla": "24h",
@@ -100,54 +100,54 @@ X-Request-Id: req_01JF4K2M8XVNP3Q7
 }`.trim()
 
 const HIRE_ME = `
-+----------------------------------------+
-|  ACCESS GRANTED: sudo hire-me          |
-|                                        |
-|  Checking availability ... [OPEN]      |
-|  Verifying skills     ... [EXCEPTIONAL]|
-|  Reference check      ... [GLOWING]    |
-|                                        |
-|  STATUS: Ready to ship on Day 1.       |
-|  CONTACT: anton@astra.dev              |
-+----------------------------------------+`.trim()
++------------------------------------------+
+|  ДОСТУП РАЗРЕШЁН: sudo hire-me           |
+|                                          |
+|  Проверка занятости    ... [СВОБОДЕН]    |
+|  Проверка навыков      ... [ОТЛИЧНЫЕ]    |
+|  Проверка рекомендаций ... [БЛЕСТЯЩИЕ]   |
+|                                          |
+|  СТАТУС: Готов к работе с первого дня.   |
+|  КОНТАКТ: anton@astra.dev                |
++------------------------------------------+`.trim()
 
-const PROJECTS = `PROJECTS --filter=distributed
+const PROJECTS = `ПРОЕКТЫ --filter=distributed
 
 [1] EventStream Platform
-    Stack:  Kafka + Node.js + Redis + PostgreSQL
-    Scale:  12M events/day, zero data loss
-    Status: Production (18 months, 99.97% uptime)
+    Stack:   Kafka + Node.js + Redis + PostgreSQL
+    Масштаб: 12M событий/день, без потерь данных
+    Статус:  Production (18 мес., 99.97% аптайм)
 
 [2] Realtime Analytics Engine
-    Stack:  ClickHouse + Kafka + React + WebSockets
-    Scale:  500K concurrent connections
-    Status: Production (Blue/Green deployed)
+    Stack:   ClickHouse + Kafka + React + WebSockets
+    Масштаб: 500K одновременных соединений
+    Статус:  Production (Blue/Green деплой)
 
 [3] Distributed Job Scheduler
-    Stack:  BullMQ + Redis Cluster + Kubernetes
-    Scale:  10K jobs/min, cross-region failover
-    Status: Open Source
+    Stack:   BullMQ + Redis Cluster + Kubernetes
+    Масштаб: 10K задач/мин, кросс-региональный failover
+    Статус:  Open Source
 
 [4] Edge Auth Middleware
-    Stack:  Next.js Edge + JWT + mTLS + Kong
-    Scale:  500K req/s at 4ms P50 globally
-    Status: Production`.trim()
+    Stack:   Next.js Edge + JWT + mTLS + Kong
+    Масштаб: 500K req/s, 4ms P50 глобально
+    Статус:  Production`.trim()
 
 type LineType = 'banner' | 'input' | 'output' | 'error'
 interface Line { id: number; type: LineType; content: string }
 
 const COMMANDS: Record<string, string> = {
-  help: `AVAILABLE COMMANDS:
-  help                       show this help
-  cat bio.md                 personal background and stack
-  projects --filter=distributed  distributed systems projects
-  system-check               live system health check
-  curl /api/contact          contact API endpoint
-  git log --graph            commit history
-  benchmarks                 performance benchmark results
-  sudo hire-me               initiate hire sequence
-  whoami                     current user info
-  clear                      clear terminal`,
+  help: `ДОСТУПНЫЕ КОМАНДЫ:
+  help                           показать эту справку
+  cat bio.md                     биография и стек технологий
+  projects --filter=distributed  проекты с распределёнными системами
+  system-check                   проверка состояния систем
+  curl /api/contact              API эндпоинт для связи
+  git log --graph                история коммитов
+  benchmarks                     результаты бенчмарков производительности
+  sudo hire-me                   инициировать процесс найма
+  whoami                         информация о пользователе
+  clear                          очистить терминал`,
   'cat bio.md': BIO,
   'projects --filter=distributed': PROJECTS,
   'system-check': SYSTEM_CHECK,
@@ -155,7 +155,7 @@ const COMMANDS: Record<string, string> = {
   'git log --graph': GIT_LOG,
   benchmarks: BENCHMARKS,
   'sudo hire-me': HIRE_ME,
-  whoami: 'anton - Senior Full-Stack Engineer | astra.dev',
+  whoami: 'anton — Senior Full-Stack Engineer | astra.dev',
 }
 
 const ALL_CMDS = Object.keys(COMMANDS)
@@ -216,7 +216,7 @@ export default function Terminal() {
           {
             id: uid(),
             type: 'error',
-            content: `command not found: ${cmd}\nType "help" for available commands.`,
+            content: `команда не найдена: ${cmd}\nВведите «help» для списка доступных команд.`,
           },
         ])
       }
@@ -278,7 +278,7 @@ export default function Terminal() {
             style={{ maxWidth: '880px' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Title bar */}
+            {/* Заголовок окна */}
             <div
               className="flex items-center justify-between px-4 py-3 border-b"
               style={{ background: '#1A1A1A', borderColor: '#2A2A2A' }}
@@ -288,13 +288,13 @@ export default function Terminal() {
                   onClick={() => setOpen(false)}
                   className="w-3 h-3 rounded-full transition-opacity hover:opacity-75"
                   style={{ background: '#FF5F57' }}
-                  aria-label="Close"
+                  aria-label="Закрыть"
                 />
                 <div className="w-3 h-3 rounded-full" style={{ background: '#FEBC2E' }} />
                 <div className="w-3 h-3 rounded-full" style={{ background: '#28C840' }} />
               </div>
               <span className="font-mono text-xs" style={{ color: '#333' }}>
-                astra-shell - bash
+                astra-shell — bash
               </span>
               <button
                 onClick={() => setOpen(false)}
@@ -302,13 +302,13 @@ export default function Terminal() {
                 style={{ color: '#333' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#F5F4F2' }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#333' }}
-                aria-label="Close terminal"
+                aria-label="Закрыть терминал"
               >
                 <X size={14} />
               </button>
             </div>
 
-            {/* Body */}
+            {/* Тело терминала */}
             <div
               className="overflow-y-auto p-5 font-mono"
               style={{
@@ -368,7 +368,7 @@ export default function Terminal() {
                   spellCheck={false}
                   autoComplete="off"
                   autoCapitalize="none"
-                  aria-label="Terminal command input"
+                  aria-label="Ввод команды терминала"
                 />
               </div>
               <div ref={bottomRef} />
