@@ -2,8 +2,9 @@ import { useRef, useMemo, useCallback } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
-const PARTICLE_COUNT = 2500
+const PARTICLE_COUNT = 2200
 
+// Crisp constellation points — NOT soft blobs
 const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform vec2 uMouse;
@@ -18,25 +19,28 @@ const vertexShader = /* glsl */ `
   void main() {
     vec3 pos = aInitPos;
 
-    // Organic noise drift
-    pos.x += sin(pos.y * 0.5 + uTime * 0.28 + aPhase) * 0.3;
-    pos.y += cos(pos.x * 0.4 + uTime * 0.21 + aPhase * 1.3) * 0.28;
-    pos.z += sin(pos.z * 0.35 + uTime * 0.19 + aPhase * 0.8) * 0.22;
+    // Subtle organic drift
+    pos.x += sin(pos.y * 0.45 + uTime * 0.22 + aPhase) * 0.28;
+    pos.y += cos(pos.x * 0.38 + uTime * 0.18 + aPhase * 1.2) * 0.25;
+    pos.z += sin(pos.z * 0.3  + uTime * 0.16 + aPhase * 0.7) * 0.20;
 
     // Cursor repulsion
-    float d = distance(pos.xy, uMouse * 5.5);
-    float repel = smoothstep(2.0, 0.0, d) * uVelocity;
-    vec2 dir = normalize(pos.xy - uMouse * 5.5 + vec2(0.0001));
-    pos.xy += dir * repel * 1.6;
+    float d = distance(pos.xy, uMouse * 5.2);
+    float repel = smoothstep(1.8, 0.0, d) * uVelocity * 0.9;
+    vec2 dir = normalize(pos.xy - uMouse * 5.2 + vec2(0.0001));
+    pos.xy += dir * repel;
 
     vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = aSize * (260.0 / -mvPos.z);
+
+    // Key fix: much smaller base size so particles are crisp dots, not blobs
+    gl_PointSize = aSize * (42.0 / -mvPos.z);
     gl_Position = projectionMatrix * mvPos;
 
-    vOpacity = smoothstep(0.1, 1.0, (pos.z + 3.5) / 7.0) * 0.6 + 0.1;
+    vOpacity = smoothstep(0.05, 0.85, (pos.z + 3.5) / 7.0) * 0.55 + 0.12;
   }
 `
 
+// Sharper disc fragment — tighter falloff
 const fragmentShader = /* glsl */ `
   uniform vec3 uColor;
   varying float vOpacity;
@@ -45,7 +49,8 @@ const fragmentShader = /* glsl */ `
     vec2 uv = gl_PointCoord - 0.5;
     float d = length(uv);
     if (d > 0.5) discard;
-    float alpha = smoothstep(0.5, 0.1, d) * vOpacity;
+    // Sharp centre, quick fade — NOT a soft blob
+    float alpha = smoothstep(0.5, 0.22, d) * vOpacity;
     gl_FragColor = vec4(uColor, alpha);
   }
 `
@@ -64,25 +69,26 @@ function ParticleField() {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
-      const r = 1.5 + Math.random() * 3.5
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      const r = 1.2 + Math.random() * 4.0
+      pos[i * 3]     = r * Math.sin(phi) * Math.cos(theta)
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 7
-      sizes[i] = Math.random() * 2.0 + 0.4
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 8
+      // Smaller sizes: 0.3 – 1.4 (was 0.4 – 2.4)
+      sizes[i]  = Math.random() * 1.1 + 0.3
       phases[i] = Math.random() * Math.PI * 2
     }
 
     const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3))
-    geometry.setAttribute('aInitPos', new THREE.BufferAttribute(pos.slice(), 3))
-    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
-    geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1))
+    geometry.setAttribute('position',  new THREE.BufferAttribute(pos, 3))
+    geometry.setAttribute('aInitPos',  new THREE.BufferAttribute(pos.slice(), 3))
+    geometry.setAttribute('aSize',     new THREE.BufferAttribute(sizes, 1))
+    geometry.setAttribute('aPhase',    new THREE.BufferAttribute(phases, 1))
 
     const uniforms = {
-      uTime: { value: 0 },
-      uMouse: { value: new THREE.Vector2(0, 0) },
+      uTime:     { value: 0 },
+      uMouse:    { value: new THREE.Vector2(0, 0) },
       uVelocity: { value: 0 },
-      uColor: { value: new THREE.Color('#D4FF00') },
+      uColor:    { value: new THREE.Color('#D4FF00') },
     }
 
     return { geometry, uniforms }
@@ -95,15 +101,15 @@ function ParticleField() {
     const dx = pointer.x - prevPtr.current.x
     const dy = pointer.y - prevPtr.current.y
     const speed = Math.sqrt(dx * dx + dy * dy) / Math.max(delta, 0.001)
-    velRef.current += (Math.min(speed, 55) - velRef.current) * 0.1
+    velRef.current += (Math.min(speed, 50) - velRef.current) * 0.1
     prevPtr.current = { x: pointer.x, y: pointer.y }
 
-    mat.uniforms.uTime.value += delta
+    mat.uniforms.uTime.value     += delta
     mat.uniforms.uMouse.value.set(pointer.x, pointer.y)
-    mat.uniforms.uVelocity.value = velRef.current
+    mat.uniforms.uVelocity.value  = velRef.current
 
-    meshRef.current.rotation.y += delta * 0.016
-    meshRef.current.rotation.x += delta * 0.008
+    meshRef.current.rotation.y += delta * 0.014
+    meshRef.current.rotation.x += delta * 0.007
   })
 
   return (
@@ -122,9 +128,9 @@ function ParticleField() {
 }
 
 function ShockwaveRing({ onFire }: { onFire?: () => void }) {
-  const ringRef = useRef<THREE.Mesh>(null)
+  const ringRef  = useRef<THREE.Mesh>(null)
   const progress = useRef(0)
-  const active = useRef(false)
+  const active   = useRef(false)
   const { pointer } = useThree()
 
   useFrame((_, delta) => {
@@ -135,7 +141,7 @@ function ShockwaveRing({ onFire }: { onFire?: () => void }) {
     const mat = ringRef.current.material as THREE.MeshBasicMaterial
     mat.opacity = Math.max(0, 1 - progress.current)
     if (progress.current >= 1) {
-      active.current = false
+      active.current   = false
       progress.current = 0
       ringRef.current.scale.set(0.001, 0.001, 1)
     }
@@ -143,9 +149,9 @@ function ShockwaveRing({ onFire }: { onFire?: () => void }) {
 
   const handleClick = useCallback(() => {
     if (!ringRef.current) return
-    active.current = true
+    active.current   = true
     progress.current = 0
-    ringRef.current.position.set(pointer.x * 5.5, pointer.y * 5.5, 0)
+    ringRef.current.position.set(pointer.x * 5.2, pointer.y * 5.2, 0)
     onFire?.()
   }, [pointer, onFire])
 
@@ -157,15 +163,12 @@ function ShockwaveRing({ onFire }: { onFire?: () => void }) {
   )
 }
 
-interface HeroCanvasProps {
-  onShockwave?: () => void
-}
-
-export default function HeroCanvas({ onShockwave }: HeroCanvasProps) {
+export default function HeroCanvas({ onShockwave }: { onShockwave?: () => void }) {
+  const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)
   return (
     <Canvas
       camera={{ position: [0, 0, 8], fov: 58 }}
-      dpr={[1, Math.min(window.devicePixelRatio, 1.5)]}
+      dpr={[1, dpr]}
       gl={{ antialias: false, powerPreference: 'high-performance', alpha: true }}
       style={{ position: 'absolute', inset: 0 }}
       aria-hidden="true"
